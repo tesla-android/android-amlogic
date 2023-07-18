@@ -10,3 +10,6 @@ BOARD_MESA3D_GALLIUM_DRIVERS := panfrost
 
 BOARD_KERNEL_SRC_DIR := glodroid/kernel/common-android14-6.1-lts
 
+# FIXME = Remove prebuilt binaries with broken elf
+BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
+
