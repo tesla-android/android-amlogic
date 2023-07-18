@@ -120,12 +120,14 @@ pipeline {
                     VERSION = getVersion(file);
                     ARTIFACT_NAME = 'TeslaAndroid-' + VERSION + '-CI-' + getCurrentBranch()  + '-' + getCommitSha() + '-BUILD-' + getBuildNumber() + '-radxa_zero'
                 }
-                dir("${BASE_PATH}/merged/out") {
+                dir("${BASE_PATH}/merged/out/radxa_zero") {
                     sh """
                         mv tesla_android_radxa_zero-ota-${env.BUILD_NUMBER}.zip ${ARTIFACT_NAME}-OTA.zip
                         mv sdcard.img ${ARTIFACT_NAME}-single-image-installer.img
+                        mv images.tar.gz ${ARTIFACT_NAME}-images.tar.gz
                         zip ${ARTIFACT_NAME}-single-image-installer.img.zip ${ARTIFACT_NAME}-single-image-installer.img
                     """
+                    archiveArtifacts artifacts: "${ARTIFACT_NAME}-images.tar.gz", fingerprint: true
                     archiveArtifacts artifacts: "${ARTIFACT_NAME}-single-image-installer.img.zip", fingerprint: true
                     archiveArtifacts artifacts: "${ARTIFACT_NAME}-OTA.zip", fingerprint: true
                 }
@@ -133,10 +135,11 @@ pipeline {
         }
         stage('Remove artifacts') {
             steps {
-                dir("${BASE_PATH}/merged/out") {
+                dir("${BASE_PATH}/merged/out/radxa_zero") {
                     sh '''
-                        rm -f *.img
-                        rm -f *.zip
+                        rm -rf *.img
+                        rm -rf *.zip
+                        rm -rf *.tar.gz
                     '''
                 }
             }
@@ -146,7 +149,6 @@ pipeline {
 	    success {
 	        script {
 	            setBuildStatus("Build succeeded", "SUCCESS");
-	            	sh "sudo fuser -km ${BASE_PATH}/merged || true"
 	                sh "sudo umount -l ${BASE_PATH}/merged"
 	            if (getCurrentBranch() != 'main') {
 	                sh "sudo rm -rf ${BASE_PATH}/upper ${BASE_PATH}/work"
@@ -156,7 +158,6 @@ pipeline {
 	    failure {
 	        script {
 	            setBuildStatus("Build failed", "FAILURE");
-	            sh "sudo fuser -km ${BASE_PATH}/merged || true"
 	            if (getCurrentBranch() == 'main') {
 	                sh "sudo umount -l ${BASE_PATH}/merged"
 	                sh "sudo rm -rf ${SHARED_WORKSPACE_PATH}"
